@@ -1,40 +1,80 @@
-function startClassification()
+Webcam.set({
+   width:350,
+   height:300,
+   image_format : 'png',
+   png_quality : 120
+});
+
+camera = document.getElementById("camera");
+
+
+Webcam.attach('#camera');
+
+function take_snapshot()
 {
-  navigator.mediaDevices.getUserMedia({ audio: true});
-  classifier = ml5.soundClassifier('https://teachablemachine.withgoogle.com/models/rWPXI2lG2/model.json', modelReady);
+    Webcam.snap(function(data_uri) {
+        document.getElementById("result").innerHTML = '<img id="captured_image"'+data_uri+'"/>';
+    });
 }
 
-function modelReady(){
-  classifier.classify(gotResults);
-}
-var dog = 0;
-var cat = 0;
+console.log('ml5 version:', ml5.version);
 
-function gotResults(error, results) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log(results);
-    random_number_r = Math.floor(Math.random() * 255) + 1;
-    random_number_g = Math.floor(Math.random() * 255) + 1;
-    random_number_b = Math.floor(Math.random() * 255) + 1;
+classifier = ml5.imageClassifier('https://teachablemachine.withgoogle.com/models/5mxzZHkpx/model.json',modelLoaded);
 
-
-    document.getElementById("result_label").innerHTML = 'Detected voice is of  - '+ results[0].label;
-    document.getElementById("result_count").innerHTML = 'Detected Dog - '+dog+ ' Detected Cat - '+cat;
-    document.getElementById("result_label").style.color = "rgb("+random_number_r+","+random_number_g+","+random_number_r+")";
-    document.getElementById("result_count").style.color = "rgb("+random_number_r+","+random_number_g+","+random_number_r+")";
-
-    img = document.getElementById('animal_image');
-
-    if (results[0].label == "Barking") {
-      img.src = 'bark.gif';
-      dog = dog+1;
-    } else if (results[0].label == "Meowing") {
-      img.src = 'meow.gif';
-      cat = cat + 1;
-    } else{
-      img.src = 'listen.gif';
-    }
+function modelLoaded() {
+    console.log('Model Loaded!');
   }
+
+  function check()
+  {
+   img = document.getElementById('captured_image');
+   classifier.classify(img, gotResult);
+  }
+function gotResult(error, results) {
+   if (error) {
+       console.error(error);
+   }else {
+       console.log(results);
+       document.getElementById("result_emotion_name").innerHTML = result[0].label;
+       document.getElementById("result_emotion_name_2").innerHTML = result[1].label;
+       prediction_1 = result[0].label;
+       prediction_2 = result[1].label;
+       speak();
+       if(results[0].label == "happy")
+       {
+           document.getElementById("update_emoji").innerHTML = "&128522"
+
+       }
+       if(results[0].label == "sad")
+       {
+           document.getElementById("update_emoji").innerHTML = "&128532"
+       }
+       if(results[0].label == "angry")
+       {
+           document.getElementById("update_emoji").innerHTML = "&128548"
+       }
+
+
+       if(results[1].label == "happy")
+       {
+           document.getElementById("update_emoji2").innerHTML = "&128522"
+       }
+       if(results[1].label == "sad")
+       {
+           document.getElementById("update_emoji2").innerHTML = "&128532"
+       }
+       if(results[1].label == "angry")
+       {
+           document.getElementById("update_emoji2").innerHTML = "&128548"
+       }
+    }
+   }
+  
+ function speak(){
+  var synth = window.speechSynthesis;
+  speak_data_1 = "The first prediction is " + prediction_1;
+  speak_data_2 = "And the second prediction is " + prediction_2;
+   var utterThis = new SpeechSynthesisUtterance(speak_data_1 + speak_data_2);
+
+  synth.speak(utterThis);
 }
